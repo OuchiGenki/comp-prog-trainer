@@ -12,13 +12,13 @@ import { ArrowRight, ExternalLink } from "lucide-react";
 import type { Problem, ProblemModel } from "@/types";
 
 export default function ReviewPage() {
-  const { dueCards, stats } = useReview();
+  const { dueCards, reviewingCards, stats } = useReview();
   const [problemMap, setProblemMap] = useState<Map<string, Problem>>(new Map());
   const [modelMap, setModelMap] = useState<Map<string, ProblemModel>>(new Map());
 
   useEffect(() => {
     async function load() {
-      const ids = dueCards.map((c) => c.problem_id);
+      const ids = [...new Set([...dueCards.map((c) => c.problem_id), ...reviewingCards.map((c) => c.problem_id)])];
       if (ids.length === 0) return;
       const [problems, models] = await Promise.all([
         db.problems.where("id").anyOf(ids).toArray(),
@@ -28,7 +28,7 @@ export default function ReviewPage() {
       setModelMap(new Map(models.map((m) => [m.problem_id, m])));
     }
     load();
-  }, [dueCards]);
+  }, [dueCards, reviewingCards]);
 
   return (
     <div className="space-y-6">
@@ -116,6 +116,60 @@ export default function ReviewPage() {
                           <Badge variant="outline" className="text-[10px]">
                             {{ learning: "学習中", reviewing: "復習中", mastered: "習得済" }[card.status]}
                           </Badge>
+                        </p>
+                      </div>
+                    </div>
+                    <a
+                      href={`https://atcoder.jp/contests/${problem?.contest_id}/tasks/${card.problem_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
+                    </a>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">
+            復習中の問題 ({reviewingCards.length}問)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {reviewingCards.length === 0 ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              復習中の問題はありません。
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {reviewingCards.map((card) => {
+                const problem = problemMap.get(card.problem_id);
+                const model = modelMap.get(card.problem_id);
+                return (
+                  <div
+                    key={card.problem_id}
+                    className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <DifficultyBadge difficulty={model?.difficulty} />
+                      <div>
+                        <Link
+                          href={`/problems/${card.problem_id}`}
+                          className="font-medium hover:underline"
+                        >
+                          {problem?.title ?? card.problem_id}
+                        </Link>
+                        <p className="text-xs text-muted-foreground">
+                          {problem?.contest_id?.toUpperCase()} - {problem?.problem_index}
+                          {" | "}
+                          次回: {card.nextReviewDate}
                         </p>
                       </div>
                     </div>

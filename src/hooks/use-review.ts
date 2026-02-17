@@ -6,18 +6,21 @@ import type { ReviewCard, ReviewQuality } from "@/types";
 
 export function useReview() {
   const [dueCards, setDueCards] = useState<ReviewCard[]>([]);
+  const [reviewingCards, setReviewingCards] = useState<ReviewCard[]>([]);
   const [dueCount, setDueCount] = useState(0);
   const [stats, setStats] = useState({ total: 0, due: 0, learning: 0, reviewing: 0, mastered: 0 });
 
   const refresh = useCallback(async () => {
-    const [cards, count, s] = await Promise.all([
+    const [cards, count, s, reviewing] = await Promise.all([
       getDueCards(),
       getDueCount(),
       getReviewStats(),
+      import("@/lib/db/database").then((m) => m.db.reviewCards.where("status").equals("reviewing").toArray()),
     ]);
     setDueCards(cards);
     setDueCount(count);
     setStats(s);
+    setReviewingCards(reviewing);
   }, []);
 
   useEffect(() => {
@@ -51,6 +54,7 @@ export function useReview() {
 
   return {
     dueCards,
+    reviewingCards,
     dueCount,
     stats,
     addToReview: add,

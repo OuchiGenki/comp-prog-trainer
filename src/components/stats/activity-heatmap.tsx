@@ -1,7 +1,7 @@
 "use client";
 
 import type { DailyReviewCount } from "@/hooks/use-stats";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ActivityHeatmapProps {
   data: DailyReviewCount[];
@@ -53,27 +53,29 @@ export function ActivityHeatmap({ data }: ActivityHeatmapProps) {
   }
 
   return (
-    <div className="overflow-x-auto">
-      <div className="flex gap-[3px] min-w-[700px]">
-        {weeks.map((week, wi) => (
-          <div key={wi} className="flex flex-col gap-[3px]">
-            {week.map((day) => (
-              <Tooltip key={day.date}>
-                <TooltipTrigger asChild>
-                  <div
-                    className={`h-3 w-3 rounded-sm ${getColor(day.count)}`}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">
-                    {day.date}: {day.count}回
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </div>
-        ))}
+    <TooltipProvider>
+      <div className="overflow-x-auto">
+        <div className="flex gap-[3px] min-w-[700px]">
+          {weeks.map((week, wi) => (
+            <div key={wi} className="flex flex-col gap-[3px]">
+              {week.map((day) => (
+                <Tooltip key={day.date}>
+                  <TooltipTrigger asChild>
+                    <div
+                      className={`h-3 w-3 rounded-sm ${getColor(day.count)}`}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">
+                      {day.date}: {day.count}回
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
